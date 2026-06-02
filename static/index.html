@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Jalebi | Voice Transactions</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Agent Jalebi</h1>
+            <p class="subtitle">Intelligent Voice Transaction Broker</p>
+        </header>
+
+        <main>
+            <div class="mic-section">
+                <button id="micBtn" class="mic-button">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="status" id="status">Tap to speak transaction</div>
+                <div id="loader" class="loader"></div>
+                <div id="transcriptionBox" class="transcription-preview">
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">TRANSCRIPTION</p>
+                    <p id="transcriptionText" style="font-style: italic;"></p>
+                </div>
+            </div>
+
+            <div class="history-section">
+                <h2><i class="fas fa-history"></i> Recent Transactions</h2>
+                <div id="txnList" class="transaction-list">
+                    <!-- Transactions will be loaded here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        const micBtn = document.getElementById('micBtn');
+        const status = document.getElementById('status');
+        const loader = document.getElementById('loader');
+        const transcriptionBox = document.getElementById('transcriptionBox');
+        const transcriptionText = document.getElementById('transcriptionText');
+        const txnList = document.getElementById('txnList');
+
+        async function initRecorder() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new mediaRecorder(stream); // Fix: use MediaRecorder, not mediaRecorder (typo)
+            } catch (err) {
+                console.error("Camera/Mic not available", err);
+            }
+        }
+
+        // Corrected MediaRecorder usage
+        let isRecording = false;
+
+        micBtn.onclick = async () => {
+            if (!isRecording) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = async () => {
+                        status.innerText = "Processing...";
+                        loader.style.display = "block";
+                        
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+                        formData.append('file', audioBlob, 'recording.wav');
+
+                        try {
+                            const response = await fetch('/process-audio', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const result = await response.json();
+                            
+                            if (result.status === 'success') {
+                                transcriptionBox.classList.add('active');
+                                transcriptionText.innerText = `"${result.transcription}"`;
+                                status.innerText = "Transaction Recorded!";
+                                loadHistory();
+                            } else {
+                                status.innerText = "Error: " + result.detail;
+                            }
+                        } catch (err) {
+                            status.innerText = "Upload failed";
+                        } finally {
+                            loader.style.display = "none";
+                        }
+                    };
+
+                    mediaRecorder.start();
+                    isRecording = true;
+                    micBtn.classList.add('recording');
+                    status.innerText = "Recording... Tap again to stop";
+                    transcriptionBox.classList.remove('active');
+
+                } catch (err) {
+                    status.innerText = "Mic access denied";
+                }
+            } else {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+            }
+        };
+
+        async function loadHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                txnList.innerHTML = '';
+                
+                if (data.length === 0) {
+                    txnList.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No transactions yet</p>';
+                    return;
+                }
+
+                data.forEach(txn => {
+                    const card = document.createElement('div');
+                    card.className = 'transaction-card';
+                    card.innerHTML = `
+                        <div class="txn-info">
+                            <h3>${txn.item}</h3>
+                            <p>${txn.name || 'Anonymous'} • Qty: ${txn.qty}</p>
+                            <p style="font-size: 0.7rem;">${new Date(txn.created_at).toLocaleString()}</p>
+                        </div>
+                        <div class="txn-amount">₹${txn.price}</div>
+                    `;
+                    txnList.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Failed to load history", err);
+            }
+        }
+
+        loadHistory();
+    </script>
+</body>
+</html>

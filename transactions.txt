@@ -1,0 +1,21 @@
+Transaction ID: TXN_20260601_bbba12a5
+Name: None
+Qty: 2
+Price: 20.0
+Item: samosas
+Timestamp: 2026-06-01 17:27:25
+----------------------------------
+Transaction ID: TXN_20260601_7c41652d
+Name: Chandra
+Qty: 2
+Price: 20.0
+Item: Samosa
+Timestamp: 2026-06-01 17:31:43
+----------------------------------
+Transaction ID: TXN_20260601_d9ab1267
+Name: None
+Qty: 2
+Price: 1
+Item: samamossa
+Timestamp: 2026-06-01 17:35:04
+----------------------------------
