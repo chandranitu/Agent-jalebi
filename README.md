@@ -1,4 +1,4 @@
-##python3.11
+##python3.11 hello
  python3.11 -m venv /home/hadoop/venv-llm
  
  source /home/hadoop/venv-llm/bin/activate
