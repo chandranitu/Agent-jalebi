@@ -1,8 +1,6 @@
 ##python3.11 hello
- python3.11 -m venv /home/hadoop/venv-llm
- 
- source /home/hadoop/venv-llm/bin/activate
- 
+ python3.11 -m venv /home/hadoop/venv-llm 
+ source /home/hadoop/venv-llm/bin/activate 
  deactivate
 
 # pip install openai-whisper python-multipart pydantic-settings
@@ -25,7 +23,6 @@ OR
 fuser -k 8000/tcp && cd ~/Agent-jalebi/ && python main.py
 
 sudo fuser -k 8080/tcp
-
 sudo lsof -i :8080
 
 ##
