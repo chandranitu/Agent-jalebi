@@ -8,7 +8,9 @@
 
 
 #MVP2
+1. 
 
+#Details
 Build an Agentic AI system using Ollama. When I speak a transaction, the AI should:
 
 Convert speech to text.
